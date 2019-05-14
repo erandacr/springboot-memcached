@@ -4,6 +4,7 @@ import java.util.Objects;
 import org.medium.examples.memcached.entity.Person;
 import org.medium.examples.memcached.repository.PersonRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -12,6 +13,7 @@ public class PersonService {
     @Autowired
     private PersonRepository personRepository;
 
+    @Cacheable("personCache")
     public Person getPerson(String id) {
         Person person = personRepository.getPersonById(id);
         if (Objects.nonNull(person)) {
