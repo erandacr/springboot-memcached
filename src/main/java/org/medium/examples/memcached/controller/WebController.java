@@ -4,6 +4,8 @@ import java.util.Calendar;
 import java.util.Date;
 import org.medium.examples.memcached.entity.Person;
 import org.medium.examples.memcached.service.PersonService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,6 +17,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("person")
 public class WebController {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(WebController.class);
+
     @Autowired
     private PersonService personService;
 
@@ -24,7 +28,8 @@ public class WebController {
         Date startTime = Calendar.getInstance().getTime();
         Person person = personService.getPerson(id);
         Date endTime = Calendar.getInstance().getTime();
-        System.out.println("Time taken for the request: " + (endTime.getTime() - startTime.getTime()) + "ms");
+        LOGGER.info(
+            "Time taken for the request: " + (endTime.getTime() - startTime.getTime()) + "ms");
 
         return person;
     }

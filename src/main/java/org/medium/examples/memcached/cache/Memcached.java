@@ -15,23 +15,21 @@ public class Memcached implements Cache {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Memcached.class);
 
-    private final String name = "personCache";
+    private String name;
 
     private MemcachedClient cache;
 
+    private int expiration;
 
-    public Memcached(String memcachedAddresses) {
-        try {
-            cache = new MemcachedClient(
-                new ConnectionFactoryBuilder()
-                    .setTranscoder(new SerializingTranscoder())
-                    .setProtocol(ConnectionFactoryBuilder.Protocol.BINARY)
-                    .build(),
-                AddrUtil.getAddresses(memcachedAddresses));
-
-        } catch (IOException ex) {
-            // the Memcached client could not be initialized.
-        }
+    public Memcached(String name, String memcachedAddresses, int expiration) throws IOException {
+        this.name = name;
+        this.expiration = expiration;
+        cache = new MemcachedClient(
+            new ConnectionFactoryBuilder()
+                .setTranscoder(new SerializingTranscoder())
+                .setProtocol(ConnectionFactoryBuilder.Protocol.BINARY)
+                .build(),
+            AddrUtil.getAddresses(memcachedAddresses));
     }
 
     @Override
@@ -46,7 +44,6 @@ public class Memcached implements Cache {
 
     @Override
     public ValueWrapper get(final Object key) {
-        System.out.println("getting from cache");
         Object value = null;
         try {
             value = cache.get(key.toString());
@@ -54,32 +51,38 @@ public class Memcached implements Cache {
             LOGGER.warn(e.getMessage());
         }
         if (value == null) {
+            LOGGER.debug("cache miss for key: " + key.toString());
             return null;
         }
+        LOGGER.debug("cache hit for key: " + key.toString());
         return new SimpleValueWrapper(value);
     }
 
 
     @Override
     public void put(final Object key, final Object value) {
-        cache.set(key.toString(), 7 * 24 * 3600, value);
-        System.out.println("added to cache");
+        if (value != null) {
+            cache.set(key.toString(), expiration, value);
+            LOGGER.debug("cache put for key: " + key.toString());
+        }
     }
 
 
     @Override
     public void evict(final Object key) {
         this.cache.delete(key.toString());
+        LOGGER.debug("cache delete for key: " + key.toString());
     }
 
     @Override
     public void clear() {
         cache.flush();
+        LOGGER.debug("cache clear completed");
     }
 
     @Override
     public <T> T get(Object o, Class<T> aClass) {
-        return (T) get(o);
+        return null;
     }
 
     @Override
